@@ -6,6 +6,9 @@ import threading
 import queue
 import time
 import pickle
+import csv
+from datetime import datetime, timedelta
+import db_utils
 
 # Step 1: Encode the known faces with caching
 def load_known_faces(directory):
@@ -104,6 +107,13 @@ if __name__ == "__main__":
     face_locations = []
     face_encodings = []
     face_names = []
+    last_logged_time = {}
+    log_interval = timedelta(seconds=60)  # 1 minuto
+   
+
+    camera_id = "entrada"  # Altere para "saida" no script da câmera de saída
+    tipo_evento = "entrada"  # Altere para "saida" no script da câmera de saída
+    db_utils.connect_and_init()
 
     while True:
         if video_capture.more():
@@ -150,7 +160,27 @@ if __name__ == "__main__":
 
                 # Draw the label with the name and confidence score
                 label = f"{name} ({confidence:.0f}%)"
-                cv2.putText(frame, label, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+                if confidence > 70:
+                    cv2.putText(frame, label, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+                    # cv2.putText(frame, "High Confidence", (left, bottom + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
+                else:
+                    cv2.putText(frame, "Unknown", (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+                    # cv2.putText(frame, "Low Confidence", (left, bottom + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+
+                if name == "Unknown" or confidence <= 70:
+                        # Extract the region of interest (the face) from the frame
+                        face_region = frame[top:bottom, left:right]
+                        # Apply a Gaussian blur to the face region
+                        blurred_face = cv2.GaussianBlur(face_region, (99, 99), 30)
+                        # Replace the original face region with the blurred version
+                        frame[top:bottom, left:right] = blurred_face
+
+                if name != "Unknown" and confidence > 70:
+                    now = datetime.now()
+                    last_time = last_logged_time.get(name)
+                    if not last_time or (now - last_time) > log_interval:
+                        db_utils.insert_evento(name, confidence, tipo_evento, camera_id)
+                        last_logged_time[name] = now
 
             # Display the resulting frame
             cv2.imshow("Video", frame)
@@ -163,3 +193,4 @@ if __name__ == "__main__":
     video_capture.stop()
     video_capture.join()
     cv2.destroyAllWindows()
+    db_utils.close_connection()
