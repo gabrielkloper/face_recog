@@ -160,14 +160,15 @@ if __name__ == "__main__":
 
                 # Draw the label with the name and confidence score
                 label = f"{name} ({confidence:.0f}%)"
-                if confidence > 70:
+                if confidence > 75:
                     cv2.putText(frame, label, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
                     # cv2.putText(frame, "High Confidence", (left, bottom + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
                 else:
                     cv2.putText(frame, "Unknown", (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
                     # cv2.putText(frame, "Low Confidence", (left, bottom + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+                
 
-                if name == "Unknown" or confidence <= 70:
+                if name == "Unknown" or confidence <= 75:
                         # Extract the region of interest (the face) from the frame
                         face_region = frame[top:bottom, left:right]
                         # Apply a Gaussian blur to the face region
@@ -175,19 +176,26 @@ if __name__ == "__main__":
                         # Replace the original face region with the blurred version
                         frame[top:bottom, left:right] = blurred_face
 
-                if name != "Unknown" and confidence > 70:
+                if name != "Unknown" and confidence > 75:
                     now = datetime.now()
                     last_time = last_logged_time.get(name)
                     if not last_time or (now - last_time) > log_interval:
                         db_utils.insert_evento(name, confidence, tipo_evento, camera_id)
                         last_logged_time[name] = now
+                
+                    
 
             # Display the resulting frame
             cv2.imshow("Video", frame)
 
-            # Break the loop on 'q' key press
-            if cv2.waitKey(1) & 0xFF == ord("q"):
+            # Break the loop on 'q' key press or reload faces on 'r' key press
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("q"):
                 break
+            elif key == ord("r"):
+                print("Recarregando faces conhecidas...")
+                known_face_encodings, known_face_names = load_known_faces(known_faces_dir)
+                print("Faces conhecidas recarregadas!")
 
     # Stop the video capture thread and close windows
     video_capture.stop()
