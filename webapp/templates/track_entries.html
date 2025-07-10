@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <meta http-equiv="refresh" content="300"> <!-- Refresh page every 5 minutes (300 seconds) -->
+
+    <h2>Track Entries and Exits (São Paulo Timezone)</h2>
+    <p>This page shows a log of entries and exits, automatically refreshing every 5 minutes. Displaying data in SP time.</p>
+    <p><a href="{{url_for('main.add_dummy_log_data')}}">Add/Refresh dummy log data for testing</a>.</p>
+
+    <hr>
+    <h3>Export Logs to CSV</h3>
+    <form method="GET" action="{{ url_for('main.export_tracking_logs_csv') }}">
+        <label for="export_date">Select Date for Export:</label>
+        <input type="date" id="export_date" name="date" value="{{ today_date }}" required>
+        <button type="submit">Export CSV for Selected Date</button>
+    </form>
+    <hr>
+
+    <h3>Access Logs Overview (Processed)</h3>
+    {% if logs %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date (SP)</th>
+                <th>Name</th>
+                <th>Entry Time (SP)</th>
+                <th>Exit Time (SP)</th>
+                <th>Duration in Room</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log_entry in logs %}
+            <tr>
+                <td>{{ log_entry.date }}</td>
+                <td>{{ log_entry.name if log_entry.name else 'N/A' }}</td>
+                <td>{{ log_entry.entry if log_entry.entry else '---' }}</td>
+                <td>{{ log_entry.exit if log_entry.exit else '---' }}</td>
+                <td>{{ log_entry.duration if log_entry.duration else '---' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No access logs found.</p>
+    {% endif %}
+{% endblock %}

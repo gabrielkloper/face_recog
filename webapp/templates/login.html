@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h2>Login</h2>
+    <form method="POST" action="{{ url_for('main.login') }}">
+        <div>
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <br>
+        <div>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <br>
+        <div>
+            <button type="submit">Login</button>
+        </div>
+    </form>
+    <p>
+        <small>If no admin user exists, you can <a href="{{ url_for('main.init_admin') }}">initialize one</a> (admin/admin).</small>
+    </p>
+{% endblock %}

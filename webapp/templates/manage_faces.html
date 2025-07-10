@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h2>Manage Faces</h2>
+    <p>Register new people, and view, edit, or delete existing entries.</p>
+
+    <h3>Register New Person</h3>
+    <form method="POST" action="{{ url_for('main.add_person') }}" enctype="multipart/form-data">
+        {{ form.hidden_tag() }} <!-- CSRF token -->
+        <div>
+            {{ form.name.label }}<br>
+            {{ form.name(size=40) }}<br>
+            {% for error in form.name.errors %}<span style="color: red;">[{{ error }}]</span><br>{% endfor %}
+        </div>
+        <br>
+        <div>
+            {{ form.person_id_system.label }}<br>
+            {{ form.person_id_system(size=40) }}<br>
+            {% for error in form.person_id_system.errors %}<span style="color: red;">[{{ error }}]</span><br>{% endfor %}
+        </div>
+        <br>
+        <div>
+            {{ form.photo.label }}<br>
+            {{ form.photo() }}<br>
+            {% for error in form.photo.errors %}<span style="color: red;">[{{ error }}]</span><br>{% endfor %}
+        </div>
+        <br>
+        <div>
+            {{ form.other_data.label }}<br>
+            {{ form.other_data(rows=4, cols=38) }}<br>
+            {% for error in form.other_data.errors %}<span style="color: red;">[{{ error }}]</span><br>{% endfor %}
+        </div>
+        <br>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+    <hr>
+
+    <h3>Registered People</h3>
+    {% if people %}
+    <table>
+        <thead>
+            <tr>
+                <th>Photo</th>
+                <th>Name</th>
+                <th>System ID</th>
+                <th>Other Data</th>
+                <th>Encoding File</th>
+                <th>Created At (SP)</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for person_item in people %} {# Renamed to avoid conflict #}
+            <tr>
+                <td>
+                    {% if person_item.photo_path %}
+                        <img src="{{ url_for('static', filename='uploads/registered_photos/' + person_item.photo_path) }}" alt="Photo of {{ person_item.name }}" style="width: 50px; height: auto;">
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>{{ person_item.name }}</td>
+                <td>{{ person_item.person_id_system }}</td>
+                <td>{{ person_item.other_data[:30] if person_item.other_data else 'N/A' }}{{ '...' if person_item.other_data and person_item.other_data|length > 30 }}</td>
+                <td>{{ person_item.face_encoding_path if person_item.face_encoding_path else 'No/Error' }}</td>
+                <td>{{ person_item.created_at_sp_str }}</td>
+                <td class="action-links">
+                    <a href="{{ url_for('main.edit_person', person_id=person_item.id) }}">Edit</a>
+                    <form method="POST" action="{{ url_for('main.delete_person', person_id=person_item.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this person, their photo, and their encoding file?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="submit" value="Delete" style="background:none; border:none; color:red; cursor:pointer; text-decoration:underline;">
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No people registered yet.</p>
+    {% endif %}
+{% endblock %}

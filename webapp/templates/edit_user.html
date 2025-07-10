@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h2>Edit User: {{ user_to_edit.username }}</h2>
+    <form method="POST" action="{{ url_for('main.edit_user', user_id=user_to_edit.id) }}">
+        {{ form.hidden_tag() }} <!-- CSRF token -->
+        <div>
+            {{ form.username.label }}<br>
+            {{ form.username(size=30) }}<br>
+            {% if form.username.errors %}
+                {% for error in form.username.errors %}
+                <span style="color: red;">[{{ error }}]</span><br>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <br>
+        <div>
+            {{ form.password.label }}<br>
+            {{ form.password(size=30) }}<br>
+            {% if form.password.errors %}
+                {% for error in form.password.errors %}
+                <span style="color: red;">[{{ error }}]</span><br>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <br>
+        <div>
+            {{ form.confirm_password.label }}<br>
+            {{ form.confirm_password(size=30) }}<br>
+            {% if form.confirm_password.errors %}
+                {% for error in form.confirm_password.errors %}
+                <span style="color: red;">[{{ error }}]</span><br>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <br>
+        <div>
+            {{ form.is_admin() }} {{ form.is_admin.label }}
+            {% if user_to_edit.id == current_user.id and not form.is_admin.data %}
+                <small style="color: orange;"><br>Note: You cannot remove your own admin status.</small>
+            {% endif %}
+        </div>
+        <br>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+    <hr>
+    <p><a href="{{ url_for('main.manage_users') }}">Back to User Management</a></p>
+{% endblock %}
